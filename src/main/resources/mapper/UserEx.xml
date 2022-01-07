@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.liujijing.mapper.UserExMapper">
+<!--    全查-->
+    <select id="getAll" resultType="com.liujijing.pojo.UserExBean">
+SELECT * from h_roomtype h
+LEFT JOIN h_room r on h.roomTypeId=r.room_type
+<where>
+    <if test="roomType!=null and roomType!=''">
+        room_type=#{roomType}
+    </if>
+</where>
+    </select>
+<!--    房间类型-->
+    <select id="getRoomType" resultType="com.liujijing.pojo.UserExBean">
+        SELECT * from h_roomtype
+    </select>
+<!--    回显数据-->
+    <select id="getHuiXian" resultType="com.liujijing.pojo.UserExBean">
+SELECT typeName,room_id,room_price,userInDate FROM h_room  h
+LEFT JOIN h_roomtype h1 on h.room_type = h1.roomTypeId
+LEFT JOIN h_inhistory i on h.room_id=i.RoomID
+WHERE room_id=#{value }
+    </select>
+<!--    添加user表-->
+    <insert id="addUser" keyProperty="userId" useGeneratedKeys="true">
+        INSERT INTO `h_user` ( `user_name`, `user_sex`, `user_id_number`, `user_phone`, `user_type`)
+         VALUES ( #{userName}, #{userSex}, #{userIdNumber}, #{userPhone}, #{userType});
+    </insert>
+<!--    添加开房表-->
+        <insert id="addFang">
+        INSERT INTO `h_inhistory` ( `InType`, `userID`, `UserInDate`, `UserOutDate`, `RoomID`, `RoomCash`, `RoomReceipt`, `RoomReceiptType`, `RoomRemark`)
+        VALUES  (#{InType}, #{userId}, #{userInDate},#{userOutDate}, #{roomId}, #{RoomCash}, #{RoomReceipt}, #{RoomReceiptType}, #{RoomRemark});
+    </insert>
+<!--    xiugai-->
+
+</mapper>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<script type="text/javascript" src="/js/vuejs/vuejs-2.5.16.js"></script>
+<script type="text/javascript" src="/js/vuejs/axios-0.18.0.js"></script>
+<body>
+    <div id="userList">
+        <center>
+            <table border="1" rules="all">
+                <tr>
+                   <td>
+                       <select v-model="userExBean.roomType">
+                        <option v-for="t in tList" :value="t.roomTypeId">{{t.typeName}}</option>
+                       </select>
+                   </td>
+                    <td>
+                        <button @click="sousuo()">点击搜索</button>
+                    </td>
+                    <td>
+                        <button @click="chakanfang()">点击查看开房表</button>
+                    </td>
+                </tr>
+                <tr>
+                    <th>房间号</th>
+                    <th>房间类型</th>
+                    <th>门市价格</th>
+                    <th>房间楼层</th>
+                    <th>房间状态</th>
+                    <th>操作</th>
+                </tr>
+                <tr v-for="u in uList">
+                    <td>{{u.roomId}}</td>
+                    <td>{{u.typeName}}</td>
+                    <td>{{u.roomPrice}}</td>
+                    <td>{{u.roomFloor}}</td>
+                    <td>{{u.roomState}}</td>
+                    <td>
+                        <span v-if="u.roomState=='入住'">
+                                <span>已满</span>
+                        </span>
+                        <span v-if="u.roomState=='空房'">
+                               <button @click="kaifang(u.roomId)">开房</button>
+                        </span>
+                        <span v-if="u.roomState=='已预约'">
+                               <button @click="kaifang(u.roomId)">开房</button>
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="100">
+                        当前{{pageNum}}/{{page.lastPage}}页，共计{{page.total}}条记录;
+                        <button @click="paging(1)">首页</button>
+                        <button @click="paging(page.prePage)">上一页</button>
+                        <button @click="paging(page.nextPage)">下一页</button>
+                        <button @click="paging(page.lastPage)">尾页</button>
+                    </td>
+                </tr>
+            </table>
+        </center>
+        <div id="addUser" style="display: none">
+            <center>
+                房号:<input type="text" v-model="userEx.roomId">
+                房间类型:<input type="text" v-model="userEx.typeName"><br>
+                姓名:<input type="text" v-model="userEx.userName">
+                性别:<span>
+                <input type="radio" value="1" v-model="userEx.userSex">男
+               <input type="radio" value="0" v-model="userEx.userSex">女
+            </span><br>
+                手机号:<input type="text" v-model="userEx.userPhone" v-model="shou" @change="pan()">
+                类型:
+                <span>
+                    <input type="radio" v-model="userEx.userType" value="0">会员
+                    <input type="radio" v-model="userEx.userType" value="1">非会员
+                    <button>会员验证</button>
+                </span>
+                <br>
+                身份证:<input type="text" v-model="userEx.userIdNumber"  v-model="sheng"  @change="sehnfen()"><br>
+                入住时间:<input type="date" v-model="userEx.userIdDate">
+                离开时间:<input type="date" v-model="userEx.userOutDate"><br>
+                房间押金:<input type="text" v-model="userEx.RoomCash"><br>
+                房间价格:<input type="text" v-model="userEx.roomPrice"><br>
+                收款方式
+                <span>
+                    <input type="radio" value="现金" v-model="userEx.RoomReceiptType">现金
+                <input type="radio" value="微信" v-model="userEx.RoomReceiptType">微信
+                <input type="radio" value="支付宝" v-model="userEx.RoomReceiptType">支付宝
+                </span>
+                <br>
+                备注信息:<input type="text" v-model="userEx.RoomRemark">
+                <button @click="addUserRoom()">点击开房</button>
+                <button @click="guan()">点击关闭</button>
+            </center>
+        </div>
+        <div id="kaifang" style="display: none">
+                <center>
+                    <table>
+                        <tr>
+                            <th></th>
+                        </tr>
+                    </table>
+                </center>
+        </div>
+    </div>
+</body>
+<script>
+    var vm = new Vue({
+        el:'#userList',
+        data:{
+            uList:[],
+            tList:[],
+            userExBean:{},
+            userEx:{},
+            pageNum:1,
+            pageSize:3,
+            page:{},
+            shou:'',
+            sheng:'',
+        },
+        methods:{
+            sousuo:function () {
+                var _this=this;
+                axios.post("user/getAll?pageNum="+_this.pageNum+"&pageSize="+_this.pageSize,_this.userExBean).then(function (res) {
+                    _this.uList=res.data.list;
+                    _this.pageNum=res.data.pageNum;
+                    _this.page=res.data;
+                })
+            },
+            paging(pageNum){
+                if(pageNum==0){
+                    pageNum = 1;
+                }
+                this.pageNum = pageNum;
+                this.sousuo();
+            },
+            getType:function () {
+                var _this=this;
+                axios.post("/user/getType").then(function (res) {
+                    _this.tList=res.data;
+                })
+            },
+            kaifang:function (roomId) {
+                document.getElementById("addUser").style.display="block";
+                var _this=this;
+                axios.post("/user/getHuiXian?roomId="+roomId).then(function (res) {
+                        _this.userEx=res.data;
+                })
+            },
+            guan:function () {
+                document.getElementById("addUser").style.display="none";
+            },
+            addUserRoom:function () {
+                var _this=this;
+                axios.post("/user/addUser",_this.userEx).then(function (res) {
+                    if(res.data=="ok"){
+                        alert("开房成功");
+                        location.reload();
+                    }else {
+                        alert("开房失败");
+                    }
+                })
+            },
+            pan:function () {
+                var _this=this;
+                if(_this.shou.length>=11){
+                    alert("请正确输入11位")
+                }else {
+                    alert("正确")
+                }
+            },
+            sehnfen:function () {
+                var _this=this;
+                if(_this.sheng.length<18){
+                    alert("正确")
+                }
+            },
+            chakanfang:function () {
+                document.getElementById("kaifang").style.display="block"
+            }
+        },
+    })
+    vm.sousuo();
+    vm.getType();
+</script>
+</html>
